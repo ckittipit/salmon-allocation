@@ -131,3 +131,35 @@ export const customerCredits: CustomerCredit[] = [
 		creditLimit: 35000,
 	},
 ]
+
+export function generateBulkOrders(count: number): Order[] {
+	const orderTypes: Order['type'][] = ['EMERGENCY', 'OVER_DUE', 'DAILY']
+
+	return Array.from({ length: count }, (_, index) => {
+		const running = index + 3
+		const type = orderTypes[index % orderTypes.length]
+
+		return {
+			order: `ORDER-${String(running).padStart(4, '0')}`,
+			subOrder: `ORDER-${String(running).padStart(4, '0')}-001`,
+			itemId: index % 2 === 0 ? 'Item-1' : 'Item-2',
+			warehouseId:
+				index % 5 === 0
+					? 'WH-000'
+					: index % 2 === 0
+						? 'WH-001'
+						: 'WH-002',
+			supplierId:
+				index % 4 === 0
+					? 'SP-000'
+					: index % 2 === 0
+						? 'SP-001'
+						: 'SP-002',
+			request: 1 + (index % 100),
+			type,
+			createDate: `2026-01'${String((index % 28) + 1).padStart(2, '0')}`,
+			customerId: index % 2 === 0 ? 'CT-001' : 'CT-002',
+			remark: index % 100 === 0 ? 'Generated bulk order' : '',
+		}
+	})
+}

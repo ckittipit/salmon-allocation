@@ -7,16 +7,30 @@
 // 		</main>
 // 	)
 // }
+'use client'
 import { useMemo, useState } from 'react'
-import { autoAllocate } from './allocation'
-import { customerCredits, orders, prices, stocks } from './data'
+import { autoAllocate, validateManualAllocation } from './allocation'
+import {
+	customerCredits,
+	generateBulkOrders,
+	orders,
+	prices,
+	stocks,
+} from './data'
 
 export default function App() {
 	const [keyword, setKeyword] = useState('')
+	const [manualQty, setManualQty] = useState(0)
+	const [manualMessage, setManualMessage] = useState('')
+
+	const displayOrders = useMemo(() => {
+		return [...orders, ...generateBulkOrders(5000)]
+	}, [])
 
 	const result = useMemo(() => {
-		return autoAllocate(orders, stocks, prices, customerCredits)
-	}, [])
+		// return autoAllocate(orders, stocks, prices, customerCredits)
+		return autoAllocate(displayOrders, stocks, prices, customerCredits)
+	}, [displayOrders])
 
 	const filteredAllocation = useMemo(() => {
 		const word = keyword.toLowerCase().trim()
@@ -56,7 +70,7 @@ export default function App() {
 				<div className='grid gap-4 md:grid-cols-3'>
 					<SummaryCard
 						title='Orders'
-						value={orders.length.toString()}
+						value={displayOrders.length.toString()}
 					/>
 					<SummaryCard
 						title='Allocated QTY'
@@ -76,6 +90,41 @@ export default function App() {
 						value={keyword}
 						onChange={(event) => setKeyword(event.target.value)}
 					/>
+				</div>
+				<div className='rounded-2xl bg-white p-4 shadow'>
+					{/* //แค่โชว์ว่าห้ามเกิน stock, limit */}
+					<h2 className='text-xl font-bold'>
+						Manual Allocation Check
+					</h2>
+					<div className='mt-4 grid gap-3'>
+						<input
+							className='rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500'
+							type='number'
+							value={manualQty}
+							onChange={(event) =>
+								setManualQty(Number(event.target.value))
+							}
+						/>
+						<button
+							className='rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700'
+							onClick={() => {
+								const validation = validateManualAllocation({
+									requestedQty: manualQty,
+									stockLeft: 40,
+									creditLeft: 3000,
+									unitPrice: 111.11,
+								})
+								setManualMessage(validation.message)
+							}}
+						>
+							Validate
+						</button>
+					</div>
+					{manualMessage && (
+						<p className='mt-3 rounded-xl bg-slate-100 p-3 text-sm'>
+							{manualMessage}
+						</p>
+					)}
 				</div>
 				<div className='overflow-hidden rounded-2xl bg-white shadow'>
 					<div className='border-b border-slate-200 p-4'>
